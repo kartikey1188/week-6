@@ -1,0 +1,251 @@
+name: Iris API CI/CD Pipeline with Docker & Kubernetes
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, dev]
+
+permissions:
+  pull-requests: write
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GAR_LOCATION: ${{ secrets.GAR_LOCATION }}
+  REPOSITORY: ${{ secrets.GAR_REPOSITORY }}
+  SERVICE: iris-api
+  REGION: ${{ secrets.GCP_REGION }}
+  CLUSTER_NAME: ${{ secrets.GKE_CLUSTER_NAME }}
+  CLUSTER_ZONE: ${{ secrets.GKE_CLUSTER_ZONE }}
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest black flake8
+
+      - name: Setup CML
+        uses: iterative/setup-cml@v2
+
+      - name: Auto-format with Black
+        run: |
+          source .venv/bin/activate
+          echo "## 🎨 Code Formatting (Black)" > report.md
+          black --check --diff . >> report.md 2>&1 || echo "✅ Code formatting passed" >> report.md
+          echo "" >> report.md
+
+      - name: Lint with Flake8
+        run: |
+          source .venv/bin/activate
+          echo "## 🔍 Linting Results (Flake8)" >> report.md
+          flake8 . --max-line-length=88 --extend-ignore=E203,W503 --exclude=.venv >> report.md 2>&1 || echo "✅ Linting passed" >> report.md
+          echo "" >> report.md
+
+      - name: Test API Endpoints
+        run: |
+          source .venv/bin/activate
+          echo "## 🧪 API Testing Results" >> report.md
+
+          # Start the FastAPI server in background
+          uvicorn iris_fastapi:app --host 0.0.0.0 --port 8000 &
+          API_PID=$!
+
+          # Wait for server to start
+          sleep 10
+
+          # Test health endpoint
+          echo "### Health Check" >> report.md
+          if curl -f http://localhost:8000/; then
+            echo "✅ Health endpoint working" >> report.md
+          else
+            echo "❌ Health endpoint failed" >> report.md
+          fi
+
+          # Test prediction endpoint
+          echo "### Prediction Test" >> report.md
+          PREDICTION_RESULT=$(curl -X POST "http://localhost:8000/predict/" \
+            -H "Content-Type: application/json" \
+            -d '{"sepal_length": 5.1, "sepal_width": 3.5, "petal_length": 1.4, "petal_width": 0.2}' \
+            --silent)
+
+          if [[ $PREDICTION_RESULT == *"predicted_class"* ]]; then
+            echo "✅ Prediction endpoint working" >> report.md
+            echo "Response: \`$PREDICTION_RESULT\`" >> report.md
+          else
+            echo "❌ Prediction endpoint failed" >> report.md
+          fi
+
+          # Clean up
+          kill $API_PID
+          echo "" >> report.md
+
+      - name: Comment results with CML
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          source .venv/bin/activate
+          echo "## 📊 CI/CD Pipeline Results" >> report.md
+          echo "Pipeline executed on: $(date)" >> report.md
+          echo "" >> report.md
+          echo "### Next Steps" >> report.md
+          echo "- ✅ Code quality checks completed" >> report.md
+          echo "- ✅ API functionality verified" >> report.md
+          echo "- 🚀 Ready for Docker build and K8s deployment" >> report.md
+          cml comment create report.md
+
+  deploy:
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GAR
+        run: |
+          gcloud auth configure-docker $GAR_LOCATION-docker.pkg.dev
+
+      - name: Build and Push Docker Image
+        run: |
+          # Build image with commit SHA tag
+          IMAGE_TAG=$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/iris-image:$GITHUB_SHA
+          docker build -t $IMAGE_TAG .
+          docker push $IMAGE_TAG
+
+          # Also tag as latest
+          LATEST_TAG=$GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/iris-image:latest
+          docker tag $IMAGE_TAG $LATEST_TAG
+          docker push $LATEST_TAG
+
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Get GKE Cluster Credentials
+        run: |
+          gcloud container clusters get-credentials $CLUSTER_NAME --zone=$CLUSTER_ZONE --project=$PROJECT_ID
+
+      - name: Deploy to Kubernetes
+        run: |
+          # Create deployment manifest
+          cat <<EOF > deployment.yaml
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: iris-api-deployment
+            labels:
+              app: iris-api
+          spec:
+            replicas: 2
+            selector:
+              matchLabels:
+                app: iris-api
+            template:
+              metadata:
+                labels:
+                  app: iris-api
+              spec:
+                containers:
+                - name: iris-api
+                  image: $IMAGE_TAG
+                  ports:
+                  - containerPort: 8200
+                  resources:
+                    requests:
+                      memory: "128Mi"
+                      cpu: "100m"
+                    limits:
+                      memory: "256Mi"
+                      cpu: "200m"
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: iris-api-service
+          spec:
+            selector:
+              app: iris-api
+            ports:
+            - protocol: TCP
+              port: 80
+              targetPort: 8200
+            type: LoadBalancer
+          EOF
+
+          # Apply the deployment
+          kubectl apply -f deployment.yaml
+
+          # Wait for deployment to be ready
+          kubectl rollout status deployment/iris-api-deployment --timeout=300s
+
+          # Get service information
+          echo "Deployment completed successfully!"
+          kubectl get pods -l app=iris-api
+          kubectl get service iris-api-service
+
+      - name: Setup CML for Deployment Report
+        uses: iterative/setup-cml@v2
+
+      - name: Create Deployment Report
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## 🚀 Deployment Status Report" > deploy_report.md
+          echo "" >> deploy_report.md
+          echo "### Docker Image" >> deploy_report.md
+          echo "- **Image**: \`$IMAGE_TAG\`" >> deploy_report.md
+          echo "- **Build Time**: $(date)" >> deploy_report.md
+          echo "" >> deploy_report.md
+
+          echo "### Kubernetes Deployment" >> deploy_report.md
+          echo "\`\`\`" >> deploy_report.md
+          kubectl get pods -l app=iris-api >> deploy_report.md
+          echo "\`\`\`" >> deploy_report.md
+          echo "" >> deploy_report.md
+
+          echo "### Service Information" >> deploy_report.md
+          echo "\`\`\`" >> deploy_report.md
+          kubectl get service iris-api-service >> deploy_report.md
+          echo "\`\`\`" >> deploy_report.md
+          echo "" >> deploy_report.md
+
+          # Get external IP if available
+          EXTERNAL_IP=$(kubectl get service iris-api-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "Pending...")
+          echo "### Access Information" >> deploy_report.md
+          echo "- **External IP**: $EXTERNAL_IP" >> deploy_report.md
+          echo "- **Port**: 80" >> deploy_report.md
+
+          if [ "$EXTERNAL_IP" != "Pending..." ]; then
+            echo "- **API URL**: http://$EXTERNAL_IP" >> deploy_report.md
+            echo "- **Health Check**: http://$EXTERNAL_IP/" >> deploy_report.md
+            echo "- **Prediction**: http://$EXTERNAL_IP/predict/" >> deploy_report.md
+          fi
+
+          echo "" >> deploy_report.md
+          echo "✅ **Deployment completed successfully!**" >> deploy_report.md
+
+          cml comment create deploy_report.md

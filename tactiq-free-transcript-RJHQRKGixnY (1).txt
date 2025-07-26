@@ -1,0 +1,506 @@
+# tactiq.io free youtube transcript
+# No title found
+# https://www.youtube.com/watch/RJHQRKGixnY
+
+00:00:00.320 [Music]
+00:00:08.500 [Music]
+00:00:13.440 So, so far we have taken a look at the
+00:00:15.599 various options available for u API
+00:00:19.119 being the mode uh the mode of serving
+00:00:21.039 for the machine learning models. Uh
+00:00:24.640 next up we will take a look at um what
+00:00:26.960 are the ways in which you can serve the
+00:00:28.800 models themselves without requiring an
+00:00:31.439 API to wrap it up. So if you take a
+00:00:34.079 model uh directly what are the options
+00:00:37.120 for wrapping uh the model itself in such
+00:00:40.399 a way that you can start uh serving the
+00:00:42.719 predictions from it. There are
+00:00:44.480 fundamentally two types. one you take
+00:00:47.200 the model and you wrap it up in batch
+00:00:49.360 code or you take the model and you wrap
+00:00:51.520 it up in streaming code. A batch code
+00:00:54.079 would be an example of a a p a batch
+00:00:57.120 python program that you execute within
+00:01:00.079 which the model itself is called as one
+00:01:02.719 of the steps. Likewise in a streaming
+00:01:06.080 code um it's similar meaning that there
+00:01:09.600 is a bunch of code that does a lot of
+00:01:11.600 lot of things and one of the code
+00:01:13.840 elements is basically the model
+00:01:15.520 invocation. So the example of a batch
+00:01:18.240 Python program is similar to the uh unit
+00:01:21.759 testing that we did u as part of the CI
+00:01:24.720 setup for the first time in CML. Um so
+00:01:27.520 that's a that's a good example because
+00:01:28.880 it's just a Python program that read a
+00:01:30.560 job lip file and then executed it.
+00:01:33.360 Whereas in the streaming code u you
+00:01:35.680 would need to work with uh specific
+00:01:38.000 streaming libraries like for instance
+00:01:39.520 the combination of spark streaming with
+00:01:41.040 Kafka and then within that uh streaming
+00:01:44.159 library you would then execute the model
+00:01:47.360 code and uh use that for u you know
+00:01:50.720 streaming predictions.
+00:01:52.560 Um so details about the streaming code
+00:01:55.040 implementation of how you know models
+00:01:57.439 get invoked is is too advanced for this
+00:02:00.640 course. um and it's not directly related
+00:02:03.920 to the objectives of this course. But if
+00:02:06.240 in case you're you know serious or want
+00:02:08.479 to learn about it in a much more
+00:02:10.878 detailed manner, there is the separate
+00:02:13.280 course that u that I host which is
+00:02:15.520 called the introduction to big data and
+00:02:17.520 that can be uh a very good vehicle for
+00:02:20.640 you to learn more about this.
+00:02:24.480 So what is batch inference? um it's for
+00:02:27.520 processing large data sets where the
+00:02:31.120 model needs to be executed on those data
+00:02:33.120 sets either at once or periodically. So
+00:02:35.920 the use case here would be something
+00:02:37.280 like a a churn prediction. You know we
+00:02:40.319 don't want to predict churn for a
+00:02:41.840 business on a daily basis which doesn't
+00:02:44.160 make sense for some of these businesses
+00:02:46.959 um or real time for that matter. It's
+00:02:49.120 good good enough that we execute it once
+00:02:50.800 a week or once a month. Uh the other
+00:02:52.959 example is for instance we've got uh a
+00:02:55.280 bunch of users who are historical users
+00:02:58.160 of the of our website or a platform or
+00:03:00.239 service and we want to just occasionally
+00:03:02.959 weed out the fraudsters. So we run this
+00:03:05.920 one once in 3 months as a as a process.
+00:03:08.800 So in this kind of um you know setup you
+00:03:11.760 got to have few associated tools on
+00:03:14.319 which the model depends a model
+00:03:16.239 execution depends. First of course is
+00:03:17.760 the data pipeline which is used to
+00:03:20.319 process this batch data and that's
+00:03:22.480 typically uh if it's large data then
+00:03:24.480 it'll be spark or if it's small enough
+00:03:26.560 data then it's just a regular pandas
+00:03:28.239 kind of a data processing on in python
+00:03:32.080 since you'll need to run this
+00:03:33.840 periodically you'll need some kind of a
+00:03:35.440 scheduleuler like what's one of the open
+00:03:38.239 source scheduulers is called as airflow
+00:03:41.440 and then um last but not the least you
+00:03:43.920 would need the model job lib itself as a
+00:03:45.920 file a pickle file, right? And invoke
+00:03:49.120 that as the model that you want to load
+00:03:51.840 and and execute against the batch data.
+00:03:54.959 So that's batch inference. In streaming
+00:03:57.439 inference, you're doing something
+00:03:59.200 similar to batch inference, but now
+00:04:00.640 you're doing it on every data element as
+00:04:02.560 and when it arrives. So you're not
+00:04:04.480 waiting for large amounts of data to get
+00:04:06.720 collected. uh you might still wait for a
+00:04:09.280 small window of data to get collected
+00:04:10.879 which which might have like one or more
+00:04:12.400 data elements or data records but you're
+00:04:14.959 not waiting for long periods of time. So
+00:04:17.199 here the use case is going to be more
+00:04:18.720 around real-time fraud detection or live
+00:04:22.000 recommendations for a user who's logged
+00:04:23.680 into the website at a particular point
+00:04:24.960 in time. So it might not use APIs but it
+00:04:27.919 might use the model itself directly but
+00:04:30.479 it uses it in a streaming fashion. So
+00:04:32.720 you're not waiting for data to get
+00:04:34.320 accumulated in any way. uh you're
+00:04:37.040 operating on the data as soon as it
+00:04:38.479 arrives. So here the tooling is vastly
+00:04:41.440 different. You would need the right set
+00:04:44.400 of tools to collect the data in a single
+00:04:48.160 place and also make the data available
+00:04:51.040 as and when it arrives. So Kafka is a is
+00:04:53.520 a great technology for this. Spark
+00:04:55.600 streaming is what uh um one of the
+00:04:58.560 examples of software which can use which
+00:05:00.560 can be used to read data from the Kafka
+00:05:03.040 and um uh operate on it instantaneously
+00:05:07.199 along with of course the model code
+00:05:08.720 itself which can get uh called as a job
+00:05:10.800 liib file or a pickle file and in some
+00:05:13.919 cases you can also instantiate that as
+00:05:15.440 an API internally and have that API be
+00:05:17.759 called u within spark streaming. So
+00:05:21.039 that's the streaming inference model.
+00:05:25.520 Now, so far we've spoken about serving
+00:05:28.080 options.
+00:05:29.840 Let's talk about deployment options.
+00:05:31.759 Right? Now, before we talk about
+00:05:33.759 deployment options, we need to
+00:05:34.880 understand where can the models be
+00:05:36.639 deployed either as APIs or as models
+00:05:40.080 themselves. Uh first up, local of
+00:05:43.039 course, because that's where the
+00:05:44.240 developer operates fundamentally. They
+00:05:46.800 use the local machine for development.
+00:05:49.120 But realistically, it's not meant for
+00:05:51.440 anything more than that, right? you
+00:05:52.720 can't use the local machine for
+00:05:53.919 production. The second deployment area
+00:05:56.560 that's possible is edge.
+00:05:58.960 Um edge means you deploy the model at
+00:06:03.360 the mobile device at the edge of the
+00:06:07.919 typical company network, right? Um so
+00:06:11.520 we'll see more examples of this. The
+00:06:13.680 third um deployment area could be
+00:06:16.080 production grade servers like the
+00:06:18.479 Kubernetes cluster that we just did uh a
+00:06:21.199 demo for that's on public cloud which is
+00:06:23.919 Google cloud or these production grade
+00:06:26.080 servers can be in the data centers
+00:06:27.680 within a company or could be in private
+00:06:29.680 cloud which is owned by the each company
+00:06:32.160 by itself. And last but not the least is
+00:06:35.600 truly serverless options which exist on
+00:06:38.080 the public cloud. So let's take a look
+00:06:39.680 at each of these. Edge deployments are
+00:06:43.039 when the models get deployed
+00:06:45.840 um onto a mobile device like for
+00:06:48.080 instance the CD that's there in my Apple
+00:06:51.039 phone, the Google Gemini that's there in
+00:06:54.479 your Google Android phones etc. Right?
+00:06:58.000 That's a mobile device edge model or
+00:07:00.960 edge AI or could be embedded devices
+00:07:03.919 like for instance a standalone smart
+00:07:06.479 refrigerator or a standalone smart
+00:07:08.720 camera right that's recording me at this
+00:07:10.479 stage. So in those kinds of systems you
+00:07:13.440 need additional software which allows
+00:07:15.120 you to work with the model that you've
+00:07:17.840 uh that you've deployed. Um so for
+00:07:20.000 instance for mobile based um inferencing
+00:07:23.120 u tensorflow ships with a version of
+00:07:25.039 itself which is conducive for mobile
+00:07:28.160 based executions which is called as
+00:07:29.840 tensorflow light. The key difference
+00:07:32.479 between tensorflow tensorflow write or
+00:07:34.240 even any other edge AI software is that
+00:07:38.400 you need to work with much lesser number
+00:07:40.960 of resources like for instance you won't
+00:07:42.560 have access to a GPU potentially you
+00:07:44.639 might need to work with compressed
+00:07:45.680 models etc. So, TensorFlow light core ML
+00:07:49.440 are two such libraries which can be
+00:07:51.120 useful for embedded systems. You might
+00:07:53.360 need to recompile
+00:07:55.759 um from the get-go, right? Which is
+00:07:58.800 which is where you would you might use
+00:08:00.960 GPU compatible frameworks uh which
+00:08:03.120 Nvidia provides called as Jetson.
+00:08:05.840 Um so edge AI is basically meant for um
+00:08:11.680 low latency predictions where you want
+00:08:13.520 the predictions to happen at the point
+00:08:16.080 of source of origin uh of data right
+00:08:19.199 source of data. So for instance, if you
+00:08:21.120 look at the way we use voice assistants
+00:08:23.280 on your on our mobile phone, if for
+00:08:26.400 instance we assume that um every single
+00:08:28.879 time the voice assistant has to talk to
+00:08:31.440 a central server to relay our request
+00:08:34.559 and then come back with an instruction
+00:08:36.240 etc. It just takes that much longer,
+00:08:38.479 right? Because each time it talks to a
+00:08:40.240 central server, it's order or orders of
+00:08:42.559 couple of seconds u latency because it
+00:08:45.760 has to go through the network or the
+00:08:47.760 public internet and then it comes back
+00:08:49.600 with a response and then we ask it to
+00:08:51.680 refine blah blah blah, right? All of
+00:08:53.360 that takes time. All of that takes much
+00:08:56.080 longer latencies than what is possible
+00:08:58.000 and what the user experience can afford.
+00:09:00.720 So offline is the other angle here. um I
+00:09:04.080 should be able to operate Siri on my
+00:09:05.600 phone without my phone requiring
+00:09:07.760 internet access.
+00:09:09.760 How is that possible? How much
+00:09:11.040 intelligence can be embedded within it?
+00:09:13.200 So those are the considerations that
+00:09:16.080 typically arise when we talk about edge
+00:09:18.399 deployment options.
+00:09:20.959 Serverless deployment on the other hand
+00:09:23.040 is speaking about ways in which you can
+00:09:27.680 you know deploy models on public cloud
+00:09:32.399 right in a way that you don't have to
+00:09:34.320 worry about the infrastructure at all.
+00:09:36.959 So let's go back to you know Vert.ex AI
+00:09:39.920 that we initially started this entire
+00:09:41.680 course with um Vert.ex AI we we took a
+00:09:45.839 look at one particular feature it has
+00:09:48.160 which is workbench and within workbench
+00:09:50.720 we made it create an instance and within
+00:09:53.440 that instance we put a notebook but if
+00:09:56.000 you look at vertex AI's options the rest
+00:09:58.080 of it it's got lot of options for other
+00:10:00.320 things as well that we've talked about
+00:10:01.920 in this course which is being able to
+00:10:04.000 run notebook without creating an
+00:10:05.519 instance being able to work with models
+00:10:08.800 directly without having to you know
+00:10:11.519 create APIs
+00:10:13.440 um being able to have experiment
+00:10:15.519 tracking just like MLflow did, model
+00:10:18.399 registries just like MLflow did. Um
+00:10:21.200 ability to create artifacts, we used it
+00:10:24.079 in fact in the in the demo we did with
+00:10:26.320 Kubernetes.
+00:10:27.839 Um so and it's got integrations with uh
+00:10:30.959 you know Kubernetes as well. So, Vortex
+00:10:33.920 AI actually is an example of a u public
+00:10:37.600 cloud ML platform which goes the whole 9
+00:10:40.720 yards of what is required for a machine
+00:10:45.920 learning model to be developed all the
+00:10:48.800 way till when it's productionized.
+00:10:51.279 So in this um you know in this use of
+00:10:54.800 vertex AI as a as a feature as a
+00:10:57.360 platform you can think of it as you know
+00:10:59.839 a serverless platform for a platform as
+00:11:02.640 a service that's the right uh precise
+00:11:04.480 term to use which simplifies
+00:11:08.079 the need for you to understand a lot of
+00:11:10.079 the infrastructure details or the
+00:11:11.839 automation details right so that's one
+00:11:15.839 approach which is a platform as a
+00:11:17.519 service approach the next approach is
+00:11:20.399 where you completely serverless which
+00:11:22.560 means you use um options which
+00:11:26.720 absolutely do not require you to you
+00:11:28.640 know think about the hardware at all. So
+00:11:31.839 uh contrast this with the Kubernetes
+00:11:33.839 demo there we had to provision a cluster
+00:11:36.880 while we used the default settings for
+00:11:38.959 the cluster which means there were
+00:11:40.720 default number of nodes pods um
+00:11:44.000 locations or regions in where the
+00:11:45.600 cluster was deployed. If we wanted to or
+00:11:49.360 if we wanted our own um you know
+00:11:53.440 flexibility, we would have chosen all of
+00:11:56.320 those specifics ourselves like including
+00:11:58.079 node types etc. So that's one way of
+00:12:01.519 going about deploying machine learning
+00:12:04.079 models in a true serverless setting. Um
+00:12:07.760 on GCP for instance that service would
+00:12:09.760 be called as cloud run. We wouldn't even
+00:12:12.720 worry about creating a cluster in those
+00:12:15.279 in those kinds of uh services like
+00:12:16.959 cloudr run. It it would provide uh
+00:12:20.320 completely serverless container
+00:12:21.760 execution. All we would need is just the
+00:12:24.160 image and cloud run would automatically
+00:12:26.880 spin up the nodes automatically scale up
+00:12:29.600 or down based on the current usage etc.
+00:12:33.120 Encourage you to try it out. We're not
+00:12:34.800 going to get uh time to try out cloud
+00:12:36.800 run in its entirety as part of this
+00:12:38.320 course but you know spend a few more
+00:12:40.800 extra credits just try out cloud run
+00:12:42.639 contrast that with kubernetes um you'll
+00:12:45.279 see the difference between serverless
+00:12:47.040 deployments versus managed you know
+00:12:49.279 server deployments
+00:12:52.800 okay so let's now start putting together
+00:12:56.639 what the CD pipeline looks like and in
+00:13:00.880 fact u what we're going to discuss here
+00:13:03.200 the CD pipeline
+00:13:04.639 in this slide is going to be your
+00:13:06.320 homework. Right? While we continue to
+00:13:08.880 use iris as the base data set, the Iris
+00:13:12.240 classifier problem statement as the base
+00:13:13.760 problem statement, uh for this week's
+00:13:16.320 assignment, you would actually do the
+00:13:18.720 buildout of the CD pipeline with CMS.
+00:13:20.639 So, please pay attention to this slide.
+00:13:22.800 Um what we want to be able to do with a
+00:13:25.680 continuous deployment pipeline is to
+00:13:28.079 have automation around three important
+00:13:30.000 steps. The first is take the app that we
+00:13:33.440 have done which is basically the model
+00:13:35.120 that we have trained and this is
+00:13:37.120 basically the output of the model that's
+00:13:38.800 already been tested out using CI right
+00:13:41.600 it's already been validated using uh
+00:13:43.839 staging data validated data whatever so
+00:13:46.880 that app you containerize using docker
+00:13:51.360 we saw how using the docker demo you run
+00:13:54.240 tests on top of this docker container to
+00:13:56.320 ensure that it's producing the results
+00:13:57.920 that it that you wanted to produce at
+00:13:59.760 the minimum some sanity tests right on
+00:14:01.920 prediction and then you go deploy this
+00:14:04.800 on appropriate Kubernetes clusters via
+00:14:08.480 container artifact registry like what we
+00:14:10.720 did with the Kubernetes demo here the
+00:14:12.959 keyword appropriate refers to the
+00:14:15.199 environments right like for instance in
+00:14:18.079 Kubernetes especially in G GKE there is
+00:14:21.680 no concept of a staging environment or a
+00:14:23.920 prod environment that's just
+00:14:25.600 nomenclature or jargon or uh segregation
+00:14:29.040 of space that we as a company as a best
+00:14:32.480 practice follower want to follow. Right?
+00:14:35.920 So when you create a cluster in GKE, you
+00:14:39.040 can give it a tag which says this is a
+00:14:41.199 staging Kubernetes cluster and therefore
+00:14:44.160 it has limitations with respect to how
+00:14:45.920 much it can scale or how much data you
+00:14:48.240 want it to pro process or how long you
+00:14:50.000 want it to live for. And then production
+00:14:52.639 Kubernetes cluster is separate. it's a
+00:14:55.680 all together a different cluster with a
+00:14:57.360 different tag with a different time to
+00:14:59.199 live etc etc. So that's what appropriate
+00:15:01.519 refers to here. So a typical CD pipeline
+00:15:04.560 will basically automate these three
+00:15:06.959 steps and get it to a stage where the
+00:15:10.480 model is deployed on a particular
+00:15:12.079 Kubernetes cluster. So please do this on
+00:15:15.279 your account as the homework for this
+00:15:17.279 week.
+00:15:19.040 Let's put this all together. Whatever
+00:15:20.880 we've learned so far, we're going to,
+00:15:23.120 you know, use git flow
+00:15:25.600 as the pattern of choice. We're going to
+00:15:28.480 use deploy code as the life cycle
+00:15:30.079 pattern of how we would productionize
+00:15:32.240 machine learning code. We will work with
+00:15:35.040 GitHub as the code repo. GCP as our
+00:15:38.399 platform for um deploying and executing
+00:15:41.519 code. CML and MLflow as tools for
+00:15:46.480 specific aspects of the MLOps
+00:15:49.440 best practices.
+00:15:51.279 So with all of this, we'll productionize
+00:15:54.000 machine learning models now, right? So
+00:15:57.440 let's go through it step by step. First
+00:16:00.240 and foremost, you've got CI. Okay, even
+00:16:03.279 before CI starts, firstly, there is a
+00:16:04.800 feature branch, right? By adopting
+00:16:07.199 gitflow principles, we would create a
+00:16:09.759 separate feature branch or a separate
+00:16:11.120 model branch for a new model that we
+00:16:12.480 want to create for a problem statement.
+00:16:14.959 So in that branch, we would do lots of
+00:16:17.920 different check-ins and commits based on
+00:16:19.920 all the different things that we uh that
+00:16:21.839 we developing. So when we are ready to
+00:16:26.240 do a merge with the develop branch we
+00:16:28.399 raise a pull request or alternatively
+00:16:31.440 for every commit that we do to the
+00:16:33.120 feature branch we raise a uh we we do
+00:16:35.920 testing. So in either of those scenarios
+00:16:38.639 there would be a CI that will be
+00:16:40.160 required which is continuous integration
+00:16:42.639 which runs a bunch of unit tests which
+00:16:44.000 runs sanity tests and then provides that
+00:16:46.480 as an output in a u comment in that
+00:16:50.240 particular GitHub repo.
+00:16:52.800 somebody's now going to go take a look
+00:16:54.399 at that comment, take a look at the CI
+00:16:56.639 tests to see whether it it passed and
+00:16:59.279 what not. So let's assume for instance
+00:17:01.120 that this is a PR uh a pull request into
+00:17:04.160 the develop branch that's happening. So
+00:17:06.559 then the manual uh manual check that
+00:17:09.520 happens in GitHub for this PR will
+00:17:12.400 ratify and let's say it approves which
+00:17:15.919 means then it'll go ahead and merge that
+00:17:19.280 feature branch or new model branch with
+00:17:20.880 the develop branch. As soon as that
+00:17:23.520 merging is done as part of the
+00:17:26.240 automation that you would have written
+00:17:28.000 in the homework pipeline as well the CD
+00:17:31.120 pipeline will run which means that CD
+00:17:34.000 pipeline will produce a model which is
+00:17:37.840 deployed in the staging environments
+00:17:41.280 Kubernetes cluster which means it's the
+00:17:43.039 staging Kubernetes cluster.
+00:17:45.840 As soon as that is done, then there
+00:17:48.160 would be an automated step that needs to
+00:17:49.919 run which will provide that staging
+00:17:52.240 Kubernetes cluster with a with a staging
+00:17:54.559 data or staging workload which will then
+00:17:57.840 execute the staging workload and verify
+00:17:59.919 the outputs.
+00:18:01.679 Right? Once that is done, then there
+00:18:04.799 would be a PR that is raised to merge
+00:18:08.880 that develop branch code into the main
+00:18:11.679 branch or into the release branch as the
+00:18:14.000 case may be.
+00:18:15.520 At that stage there would be another CI
+00:18:17.280 that's done because the main branch of
+00:18:19.200 the release branch might have deviated
+00:18:21.120 from the develop branch at some point in
+00:18:23.039 the past. So therefore a fresh round of
+00:18:25.600 testing that CI has its own set of tests
+00:18:28.799 by the way right not necessarily it's a
+00:18:31.039 copy of the CI that's there in step one
+00:18:33.760 and at that stage also CML will help it
+00:18:37.280 create a particular comment along with
+00:18:39.600 the report for accuracy etc etc. So
+00:18:42.799 there is a manual approval for that
+00:18:44.880 step. That manual approval will then
+00:18:48.080 ratify and then say it's okay to merge
+00:18:51.360 with main or merge with release. And
+00:18:53.840 then that will in turn trigger the CD
+00:18:56.640 pipeline for that merging. Right? As
+00:18:59.280 soon as the merge is done, the CD
+00:19:01.200 pipeline gets triggered and then the
+00:19:03.600 model gets deployed in production
+00:19:06.080 Kubernetes cluster automatically.
+00:19:09.600 Notice that there is no human
+00:19:10.880 involvement in touching the production
+00:19:13.280 environment,
+00:19:15.200 right? So the CD pipeline automatically
+00:19:17.520 deploys that the CD pipeline deploying
+00:19:20.880 that also would have registered that
+00:19:23.520 model in ML flow. So therefore, you're
+00:19:28.000 now ready to have the challenger model
+00:19:31.039 because that's the new model that you've
+00:19:32.720 deployed right now compete against the
+00:19:35.280 champion model. How much of the
+00:19:37.280 competition happens? How do you split
+00:19:39.600 the traffic? All of that uh corresponds
+00:19:41.600 to the load balancer configuration of
+00:19:43.360 that Kubernetes cluster. In fact, you
+00:19:45.360 can have another load balancer which
+00:19:47.120 sits as a separate service which then
+00:19:49.840 routes the traffic to the load balancer
+00:19:52.240 of the new Kubernetes cluster that
+00:19:53.600 you've created now for the new model the
+00:19:55.280 champion uh the challenger model and uh
+00:19:58.799 routes that remaining traffic to the
+00:20:00.400 champion models Kubernetes clusters load
+00:20:02.640 balancer. So that happens as a you know
+00:20:06.240 parent load balancer configuration. So
+00:20:08.880 that comes down to the functionality
+00:20:10.320 that you have already deployed. So then
+00:20:13.440 you go through the champion challenger
+00:20:14.880 evaluation and then let's say the
+00:20:18.160 results are out after a week or a month,
+00:20:20.880 right? At which point there's manual
+00:20:22.799 review. The manual review finds that the
+00:20:25.039 challenger is actually doing really well
+00:20:26.880 and it's time to promote. How do you
+00:20:29.840 promote? At that stage go to MLflow
+00:20:33.840 promote that model as the new champion
+00:20:36.159 model and
+00:20:38.960 uh from that point on the load balancer
+00:20:41.200 traffic can be completely rerouted to
+00:20:43.440 the challenger models production
+00:20:45.760 Kubernetes cluster and then the champion
+00:20:48.240 model gets sunset and in ML flow the
+00:20:51.200 champion model gets archived. So that's
+00:20:54.159 your complete CI/CD pipeline for ML in
+00:20:57.200 production for enterpriseg grade uh
+00:20:59.520 governance and observability.
+00:21:02.640 Thank you. Um and we'll see you in the
+00:21:06.320 next week's course where we'll start
+00:21:08.000 talking about monitoring.
+00:21:10.690 [Music]
