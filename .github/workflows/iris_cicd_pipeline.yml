@@ -14,13 +14,13 @@ permissions:
   repository-projects: write
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GAR_LOCATION: ${{ secrets.GAR_LOCATION }}
-  REPOSITORY: ${{ secrets.GAR_REPOSITORY }}
+  PROJECT_ID: initial-project-460522
+  GAR_LOCATION: us-central1
+  REPOSITORY: iris-repo
   SERVICE: iris-api
-  REGION: ${{ secrets.GCP_REGION }}
-  CLUSTER_NAME: ${{ secrets.GKE_CLUSTER_NAME }}
-  CLUSTER_ZONE: ${{ secrets.GKE_CLUSTER_ZONE }}
+  REGION: us-central1
+  CLUSTER_NAME: iris-cluster
+  CLUSTER_ZONE: us-central1-a
 
 jobs:
   test-and-build:
@@ -130,6 +130,7 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: initial-project-460522
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
