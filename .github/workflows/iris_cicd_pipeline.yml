@@ -10,6 +10,8 @@ permissions:
   pull-requests: write
   contents: read
   id-token: write
+  issues: write
+  repository-projects: write
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -108,7 +110,12 @@ jobs:
           echo "- ✅ Code quality checks completed" >> report.md
           echo "- ✅ API functionality verified" >> report.md
           echo "- 🚀 Ready for Docker build and K8s deployment" >> report.md
-          cml comment create report.md
+          
+          # Try CML comment, fallback to simple output if it fails
+          cml comment create report.md || {
+            echo "CML comment failed, showing report content:"
+            cat report.md
+          }
 
   deploy:
     needs: test-and-build
@@ -248,4 +255,8 @@ jobs:
           echo "" >> deploy_report.md
           echo "✅ **Deployment completed successfully!**" >> deploy_report.md
 
-          cml comment create deploy_report.md
+          # Try CML comment, fallback to simple output if it fails
+          cml comment create deploy_report.md || {
+            echo "CML comment failed, showing deployment report:"
+            cat deploy_report.md
+          }
