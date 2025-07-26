@@ -19,7 +19,7 @@ env:
   REPOSITORY: week6-registry
   SERVICE: iris-api
   REGION: us-central1
-  CLUSTER_NAME: iris-cluster
+  CLUSTER_NAME: week6-iris-cluster
   CLUSTER_ZONE: us-central1-a
 
 jobs:
@@ -110,7 +110,7 @@ jobs:
           echo "- ✅ Code quality checks completed" >> report.md
           echo "- ✅ API functionality verified" >> report.md
           echo "- 🚀 Ready for Docker build and K8s deployment" >> report.md
-          
+
           # Try CML comment, fallback to simple output if it fails
           cml comment create report.md || {
             echo "CML comment failed, showing report content:"
@@ -138,7 +138,7 @@ jobs:
       - name: Configure Docker for GAR
         run: |
           gcloud auth configure-docker $GAR_LOCATION-docker.pkg.dev
-          
+
           # Create repository if it doesn't exist
           gcloud artifacts repositories create $REPOSITORY \
             --repository-format=docker \

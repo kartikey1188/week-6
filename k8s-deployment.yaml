@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: iris-api
-          image: YOUR_GAR_LOCATION-docker.pkg.dev/YOUR_PROJECT_ID/YOUR_REPOSITORY/iris-image:latest
+          image: us-central1-docker.pkg.dev/initial-project-460522/week6-registry/iris-image:latest
           ports:
             - containerPort: 8200
           resources:
