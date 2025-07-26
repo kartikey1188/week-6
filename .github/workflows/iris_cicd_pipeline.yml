@@ -16,7 +16,7 @@ permissions:
 env:
   PROJECT_ID: initial-project-460522
   GAR_LOCATION: us-central1
-  REPOSITORY: iris-repo
+  REPOSITORY: week6-registry
   SERVICE: iris-api
   REGION: us-central1
   CLUSTER_NAME: iris-cluster
@@ -138,6 +138,12 @@ jobs:
       - name: Configure Docker for GAR
         run: |
           gcloud auth configure-docker $GAR_LOCATION-docker.pkg.dev
+          
+          # Create repository if it doesn't exist
+          gcloud artifacts repositories create $REPOSITORY \
+            --repository-format=docker \
+            --location=$GAR_LOCATION \
+            --description="Iris API Docker repository" || echo "Repository already exists"
 
       - name: Build and Push Docker Image
         run: |
