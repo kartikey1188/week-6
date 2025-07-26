@@ -21,6 +21,7 @@ env:
   REGION: us-central1
   CLUSTER_NAME: week6-iris-cluster
   CLUSTER_ZONE: us-central1
+  USE_GKE_GCLOUD_AUTH_PLUGIN: "True"
 
 jobs:
   test-and-build:
@@ -134,6 +135,11 @@ jobs:
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install GKE Auth Plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
+          echo "export USE_GKE_GCLOUD_AUTH_PLUGIN=True" >> $GITHUB_ENV
 
       - name: Configure Docker for GAR
         run: |
